@@ -61,8 +61,6 @@ app.post('/oauth/authorize', function (req, res, next) {
     var request = new Request(req);
     var response = new Response(res);
 
-    console.log(request.query)
-
     //TODO: DELETE IT: JUST HERE FOR DEVELOPMENT PURPOSES
     let authenticateHandler = {
         handle: function (request, response) {
@@ -89,7 +87,20 @@ app.post('/oauth/access_token', function (req, res) {
     var request = new Request(req);
     var response = new Response(res);
 
-    return app.oauth.token(request, response);
+    return app.oauth.token(request, response)
+        .then(function (token) {
+            // Todo: remove unnecessary values in response
+            const token_modified = {
+                accessToken: token.accessToken, // JWT with user id and client id and all other information important
+                accessTokenExpiresAt: token.accessTokenExpiresAt,
+                refreshToken: token.refreshToken,
+                refreshTokenExpiresAt: token.refreshTokenExpiresAt,
+                token_type: "bearer"
+            }
+            return res.json(token_modified)
+        }).catch(function (err) {
+            return res.status(500).json(err)
+        });
 });
 // Give the Access token to the third party application
 

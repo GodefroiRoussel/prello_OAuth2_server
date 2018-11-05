@@ -22,22 +22,8 @@ mongoose.connect(uristring, function (err, res) {
 /**
  * Schema definitions.
  */
-
-const OAuthTokensSchema = new Schema({
-    accessToken: { type: String },
-    accessTokenExpiresOn: { type: Date },
-    client: { type: Object },  // `client` and `user` are required in multiple places, for example `getAccessToken()`
-    clientId: { type: String },
-    refreshToken: { type: String },
-    refreshTokenExpiresOn: { type: Date },
-    user: { type: Object },
-    userId: { type: String },
-})
-mongoose.model('OAuthTokens', OAuthTokensSchema);
-
-
 const OAuthClientsSchema = new Schema({
-    clientId: { type: String },
+    id: { type: String },
     clientSecret: { type: String },
     redirectUris: { type: Array },
     grants: { type: Array }
@@ -55,11 +41,28 @@ const OAuthUsersSchema = new Schema({
 mongoose.model('OAuthUsers', OAuthUsersSchema);
 
 
+const OAuthTokensSchema = new Schema({
+    accessToken: { type: String }, // JWT with user id and client id and all other information important
+    accessTokenExpiresAt: { type: Date },
+    client: {
+        id: { type: String }
+    },
+    clientId: { type: String },
+    refreshToken: { type: String },
+    refreshTokenExpiresAt: { type: Date },
+    user: { type: Object },
+    userId: { type: String },
+})
+mongoose.model('OAuthTokens', OAuthTokensSchema);
+
+
 const OAuthAuthorizationCodeSchema = new Schema({
-    authorizationCode: { type: String },
+    authorizationCode: { type: String, default: 'test' },
     redirect_uri: { type: String },
     expiresAt: { type: Date },
-    client: { type: OAuthClientsSchema },
+    client: {
+        id: { type: String }
+    },
     clientId: { type: String },
     user: { type: OAuthUsersSchema }
 })
@@ -72,6 +75,9 @@ var OAuthAuthorizationCodeModel = mongoose.model('OAuthAuthorizationCode');
 
 OAuthAuthorizationCodeModel.find({}).remove()
     .then(() => console.log('Removed all OAuth Authorization Code'));
+
+OAuthTokensModel.find({}).remove()
+    .then(() => console.log('Removed all OAuth Tokens '));
 //Populate some datas
 OAuthUsersModel.find({}).remove()
     .then(() => {
@@ -90,7 +96,7 @@ OAuthUsersModel.find({}).remove()
 OAuthClientsModel.find({}).remove()
     .then(() => {
         OAuthClientsModel.create({
-            clientId: 'a17c21ed',
+            id: 'a17c21ed',
             clientSecret: 'client1',
             redirectUris: ['http://localhost:3000/redirected'],
             grants: ['password', 'authorization_code']
@@ -107,8 +113,7 @@ OAuthClientsModel.find({}).remove()
 
 module.exports.getAccessToken = function (bearerToken) {
     // Adding `.lean()`, as we get a mongoose wrapper object back from `findOne(...)`, and oauth2-server complains.
-    //return OAuthTokensModel.findOne({ accessToken: bearerToken }).lean();
-    return bearerToken
+    return OAuthTokensModel.findOne({ accessToken: bearerToken }).lean();
 };
 
 /**
@@ -116,14 +121,13 @@ module.exports.getAccessToken = function (bearerToken) {
  */
 
 module.exports.getClient = function (clientId, clientSecret) {
-    return OAuthClientsModel.findOne({ clientId: clientId }).lean();
+    return OAuthClientsModel.findOne({ id: clientId }).lean();
     //return OAuthClientsModel.findOne({ clientId: clientId, clientSecret: clientSecret }).lean();
 };
 
 /**
  * Get refresh token.
  */
-
 module.exports.getRefreshToken = function (refreshToken) {
     //return OAuthTokensModel.findOne({ refreshToken: refreshToken }).lean();
     return refreshToken
@@ -152,14 +156,47 @@ module.exports.saveAuthorizationCode = function (authorizationCode, client, user
         authorizationCode: 'test',
         redirect_uri: 'http://localhost:3000/redirected',
         expiresAt: Date.now() + 3600 * 1000,
-        client: client,
+        client: {
+            id: client.id
+        },
         clientId: client.clientId,
         user: user
     })
 
     // Can't just chain `lean()` to `save()` as we did with `findOne()` elsewhere. Instead we use `Promise` to resolve the data.
     return new Promise(function (resolve, reject) {
-        oAuthAuthorizationCode.save(function (err, data) {
+        return oAuthAuthorizationCode.save(function (err, data) {
+            if (err) reject(err);
+            else {
+                resolve(data);
+            }
+        });
+    }).then(function (saveResult) {
+        // `saveResult` is mongoose wrapper object, not doc itself. Calling `toJSON()` returns the doc.
+        saveResult = saveResult && typeof saveResult == 'object' ? saveResult.toJSON() : saveResult;
+        return saveResult;
+    }).catch(err => console.log(err));
+};
+
+/**
+ * Save token.
+ */
+
+module.exports.saveToken = function (token, client, user) {
+    var accessToken = new OAuthTokensModel({
+        accessToken: token.accessToken,
+        accessTokenExpiresAt: token.accessTokenExpiresAt,
+        client: client,
+        clientId: client.clientId,
+        refreshToken: token.refreshToken,
+        refreshTokenExpiresAt: token.refreshTokenExpiresAt,
+        user: user,
+        userId: user._id,
+    });
+
+    // Can't just chain `lean()` to `save()` as we did with `findOne()` elsewhere. Instead we use `Promise` to resolve the data.
+    return new Promise(function (resolve, reject) {
+        accessToken.save(function (err, data) {
             if (err) reject(err);
             else resolve(data);
         });
@@ -171,43 +208,6 @@ module.exports.saveAuthorizationCode = function (authorizationCode, client, user
     });
 };
 
-/**
- * Save token.
- */
-
-module.exports.saveToken = function (token, client, user) {
-    var accessToken = new OAuthTokensModel({
-        accessToken: token.accessToken,
-        accessTokenExpiresOn: token.accessTokenExpiresOn,
-        client: client,
-        clientId: client.clientId,
-        refreshToken: token.refreshToken,
-        refreshTokenExpiresOn: token.refreshTokenExpiresOn,
-        user: user,
-        userId: user._id,
-    });
-    // Can't just chain `lean()` to `save()` as we did with `findOne()` elsewhere. Instead we use `Promise` to resolve the data.
-    return new Promise(function (resolve, reject) {
-        accessToken.save(function (err, data) {
-            if (err) reject(err);
-            else resolve(data);
-        });
-    }).then(function (saveResult) {
-        // `saveResult` is mongoose wrapper object, not doc itself. Calling `toJSON()` returns the doc.
-        saveResult = saveResult && typeof saveResult == 'object' ? saveResult.toJSON() : saveResult;
-
-        // Unsure what else points to `saveResult` in oauth2-server, making copy to be safe
-        var data = new Object();
-        for (var prop in saveResult) data[prop] = saveResult[prop];
-
-        // /oauth-server/lib/models/token-model.js complains if missing `client` and `user`. Creating missing properties.
-        data.client = data.clientId;
-        data.user = data.userId;
-
-        return data;
-    });
-};
-
 module.exports.revokeAuthorizationCode = function (authorization_code) {
-    return OAuthAuthorizationCodeModel.findOne({ authorizationCode: authorization_code }).remove();
+    return OAuthAuthorizationCodeModel.findOne({ authorizationCode: authorization_code.authorizationCode }).remove();
 }
