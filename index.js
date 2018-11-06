@@ -24,13 +24,13 @@ app.set('view engine', 'ejs'); // set up ejs for templating
 // Add OAuth server
 app.oauth = new oauthServer({
     debug: true,
-    model: require('./model'),
-    grants: ['authorization_code', 'password']
+    model: require('./model')
 })
 
 // TODO DELETE JUST HERE FOR DEVELOPMENT PURPOSES
 var OAuthUsersModel = mongoose.model('OAuthUsers');
 
+//TODO: Handle CORS
 /*
 app.all('/*', function (req, res, next) {
     // CORS headers
@@ -46,10 +46,10 @@ app.all('/*', function (req, res, next) {
 });
 */
 
+//TODO: UPDATE THE LOGIN FORM AND LET THE POSSIBILITY TO GET AN AUTHORIZATION PAGE WITH ONLY ALLOW OR DENY CHOICE
 // Get authorization page.
 app.get('/oauth/authorize', function (req, res) {
     // render an authorization form
-
     res.render('login.ejs', { application: 'Prello Third Parties Application' });
 });
 
@@ -61,7 +61,7 @@ app.post('/oauth/authorize', function (req, res, next) {
     var request = new Request(req);
     var response = new Response(res);
 
-    //TODO: DELETE IT: JUST HERE FOR DEVELOPMENT PURPOSES
+    //TODO: UPDATE IT: JUST HERE FOR DEVELOPMENT PURPOSES
     let authenticateHandler = {
         handle: function (request, response) {
             return OAuthUsersModel.findOne({ username: 'godefroiroussel', password: 'password' }).lean();;
@@ -69,14 +69,24 @@ app.post('/oauth/authorize', function (req, res, next) {
     };
 
     const option = { authenticateHandler: authenticateHandler }
-    return app.oauth.authorize(request, response, option).then(function (code) {
-        res.locals.oauth = { code: code };
-    }).then(function () {
-        return handleResponse.call(this, req, res, response);
-    })
-        .catch(function (err) {
+    return app.oauth.authorize(request, response, option)
+        .then(function (code) {
+            res.locals.oauth = { code: code };
+
+            if (code.accessToken) {
+                //Case Implicit Grant
+                const token_modified = {
+                    accessToken: code.accessToken, // JWT with user id and client id and all other information important
+                    accessTokenExpiresAt: code.accessTokenExpiresAt,
+                    token_type: "bearer"
+                }
+                return res.json(token_modified)
+            } else {
+
+                return handleResponse.call(this, req, res, response);
+            }
+        }).catch(function (err) {
             // handle error condition
-            console.log(err)
             return handleError.call(this, err, req, res, response, next);
         });
 });
@@ -89,7 +99,6 @@ app.post('/oauth/access_token', function (req, res) {
 
     return app.oauth.token(request, response)
         .then(function (token) {
-            // Todo: remove unnecessary values in response
             const token_modified = {
                 accessToken: token.accessToken, // JWT with user id and client id and all other information important
                 accessTokenExpiresAt: token.accessTokenExpiresAt,

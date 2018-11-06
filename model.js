@@ -99,7 +99,7 @@ OAuthClientsModel.find({}).remove()
             id: 'a17c21ed',
             clientSecret: 'client1',
             redirectUris: ['http://localhost:3000/redirected'],
-            grants: ['password', 'authorization_code']
+            grants: ['implicit', 'authorization_code']
         })
     }).
     then(() => {
@@ -121,8 +121,10 @@ module.exports.getAccessToken = function (bearerToken) {
  */
 
 module.exports.getClient = function (clientId, clientSecret) {
-    return OAuthClientsModel.findOne({ id: clientId }).lean();
-    //return OAuthClientsModel.findOne({ clientId: clientId, clientSecret: clientSecret }).lean();
+    if (clientSecret == null)
+        return OAuthClientsModel.findOne({ id: clientId }).lean();
+    else
+        return OAuthClientsModel.findOne({ id: clientId, clientSecret: clientSecret }).lean();
 };
 
 /**
