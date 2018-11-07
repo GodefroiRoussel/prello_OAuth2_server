@@ -2,10 +2,10 @@ const mongoose = require('mongoose');
 require('dotenv').config();
 const models = require('./models');
 
-const OAuthTokensModel = models.OAuthTokensModel;
-const OAuthClientsModel = models.OAuthClientsModel;
-const OAuthUsersModel = models.OAuthUsersModel;
-const OAuthAuthorizationCodeModel = models.OAuthAuthorizationCodeModel;
+const TokensModel = models.TokensModel;
+const ClientsModel = models.ClientsModel;
+const UsersModel = models.UsersModel;
+const AuthorizationCodeModel = models.AuthorizationCodeModel;
 //------------------------ CONNECTION DATABASE ------------------------------------
 
 var uristring = process.env.dbURL || 'mongodb://localhost/test';
@@ -23,29 +23,43 @@ mongoose.connect(uristring, function (err, res) {
 // -------------------------- Populate DB --------------------------------
 
 
-OAuthAuthorizationCodeModel.find({}).remove()
+AuthorizationCodeModel.find({}).remove()
     .then(() => console.log('Removed all OAuth Authorization Code'));
 
-OAuthTokensModel.find({}).remove()
+TokensModel.find({}).remove()
     .then(() => console.log('Removed all OAuth Tokens '));
 //Populate some datas
-OAuthUsersModel.find({}).remove()
+UsersModel.find({}).remove()
     .then(() => {
-        OAuthUsersModel.create({
-            email: 'test@email.com',
-            firstname: 'Godefroi',
-            lastname: 'Roussel',
-            password: 'password',
-            username: 'godefroiroussel'
+        UsersModel.create({
+            createdAt: Date.now(),
+            services: {},
+            username: 'godefroiroussel',
+            emails: ['test@email.com'],
+            profile: {
+                genderUser: 'Male',
+                firstNameUser: 'Godefroi',
+                lastNameUser: 'Roussel',
+                nickNameUser: 'GodefroiRoussel',
+                mailUser: 'test@email.com',
+                biographyUser: '',
+                initialsUser: 'GR',
+                passwordUser: 'password',
+                seedUser: 'test',
+                avatarUser: '',
+                languageUser: '',
+                colourBlindUser: ''
+            },
+
         })
     })
     .then(function () {
-        console.log('finished populating OAuthUsersModel');
+        console.log('finished populating UsersModel');
     });
 
-OAuthClientsModel.find({}).remove()
+ClientsModel.find({}).remove()
     .then(() => {
-        OAuthClientsModel.create({
+        ClientsModel.create({
             id: 'a17c21ed',
             clientSecret: 'client1',
             redirectUris: ['http://localhost:3000/redirected'],
@@ -56,7 +70,7 @@ OAuthClientsModel.find({}).remove()
         })
     }).
     then(() => {
-        console.log('finished populating OAuthClientsModel');
+        console.log('finished populating ClientsModel');
     });
 
 
@@ -65,31 +79,36 @@ OAuthClientsModel.find({}).remove()
 // -------------------------- FUNCTIONS ---------------------------------------
 module.exports.findAuthorizationToken = function (bearerToken) {
     // Adding `.lean()`, as we get a mongoose wrapper object back from `findOne(...)`, and oauth2-server complains.
-    return OAuthTokensModel.findOne({ accessToken: bearerToken }).lean();
+    return TokensModel.findOne({ accessToken: bearerToken }).lean();
 }
 
 module.exports.getClientWithId = function (clientId) {
-    return OAuthClientsModel.findOne({ id: clientId }).lean();
+    return ClientsModel.findOne({ id: clientId }).lean();
 }
 
 module.exports.getClientWithIdAndSecret = function (clientId, clientSecret) {
-    return OAuthClientsModel.findOne({ id: clientId, clientSecret: clientSecret }).lean();
+    return ClientsModel.findOne({ id: clientId, clientSecret: clientSecret }).lean();
 }
 
 module.exports.getRefreshToken = function (refreshToken) {
-    return OAuthTokensModel.findOne({ refreshToken: refreshToken }).lean();
+    return TokensModel.findOne({ refreshToken: refreshToken }).lean();
 }
 
 module.exports.getUser = function (username, password) {
-    return OAuthUsersModel.findOne({ username: username, password: password }).lean();
+    return UsersModel.findOne({ username: username }).lean().then(user => {
+        if (user && user.profile.passwordUser != password)
+            return null
+
+        return user;
+    });
 }
 
 module.exports.getAuthorizationCode = function (authorization_code) {
-    return OAuthAuthorizationCodeModel.findOne({ authorizationCode: authorization_code }).lean();
+    return AuthorizationCodeModel.findOne({ authorizationCode: authorization_code }).lean();
 }
 
 module.exports.saveAuthorizationCode = function (authorizationCode, client, user) {
-    var oAuthAuthorizationCode = new OAuthAuthorizationCodeModel({
+    var oAuthAuthorizationCode = new AuthorizationCodeModel({
         authorizationCode: 'test',//authorizationCode.authorizationCode,
         redirect_uri: authorizationCode.redirectUri,
         expiresAt: authorizationCode.expiresAt,
@@ -117,7 +136,7 @@ module.exports.saveAuthorizationCode = function (authorizationCode, client, user
 }
 
 module.exports.saveToken = function (token, client, user) {
-    var accessToken = new OAuthTokensModel({
+    var accessToken = new TokensModel({
         accessToken: token.accessToken,
         accessTokenExpiresAt: token.accessTokenExpiresAt,
         refreshToken: token.refreshToken,
@@ -143,9 +162,9 @@ module.exports.saveToken = function (token, client, user) {
 }
 
 module.exports.revokeAuthorizationCode = function (authorization_code) {
-    return OAuthAuthorizationCodeModel.findOne({ authorizationCode: authorization_code.authorizationCode }).remove();
+    return AuthorizationCodeModel.findOne({ authorizationCode: authorization_code.authorizationCode }).remove();
 }
 
 module.exports.revokeToken = function (token) {
-    return OAuthTokensModel.findOne({ refreshToken: token.refreshToken }).remove();
+    return TokensModel.findOne({ refreshToken: token.refreshToken }).remove();
 }

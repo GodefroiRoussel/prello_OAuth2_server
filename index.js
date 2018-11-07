@@ -3,13 +3,13 @@ var express = require('express');
 var bodyParser = require('body-parser');
 var https = require('https');
 var http = require('http');
-var expressJWT = require('express-jwt');
 var path = require("path");
 var mongoose = require('mongoose');
 const oauthServer = require("oauth2-server");
 var Request = require('oauth2-server').Request;
 var Response = require('oauth2-server').Response;
 var UnauthorizedRequestError = require('oauth2-server/lib/errors/unauthorized-request-error');
+const db = require('./database/databaseHelper');
 
 
 const app = express();
@@ -26,9 +26,6 @@ app.oauth = new oauthServer({
     debug: true,
     model: require('./model')
 })
-
-// TODO DELETE JUST HERE FOR DEVELOPMENT PURPOSES
-var OAuthUsersModel = mongoose.model('OAuthUsers');
 
 //TODO: Handle CORS
 /*
@@ -64,7 +61,7 @@ app.post('/oauth/authorize', function (req, res, next) {
     //TODO: UPDATE IT: JUST HERE FOR DEVELOPMENT PURPOSES
     let authenticateHandler = {
         handle: function (request, response) {
-            return OAuthUsersModel.findOne({ username: 'godefroiroussel', password: 'password' }).lean();;
+            return db.getUser('godefroiroussel', 'password');
         }
     };
 

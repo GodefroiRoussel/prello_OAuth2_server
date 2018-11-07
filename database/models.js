@@ -1,9 +1,8 @@
 const mongoose = require('mongoose');
 var Schema = mongoose.Schema;
-
 // -------------------------- Creating Schema --------------------------------
 
-const OAuthClientsSchema = new Schema({
+const ClientsSchema = new Schema({
     id: { type: String },
     clientSecret: { type: String },
     redirectUris: { type: Array },
@@ -14,12 +13,25 @@ const OAuthClientsSchema = new Schema({
 })
 
 
-const OAuthUsersSchema = new Schema({
-    email: { type: String, default: '' },
-    firstname: { type: String },
-    lastname: { type: String },
-    password: { type: String },
-    username: { type: String }
+const UsersSchema = new Schema({
+    createdAt: { type: Date },
+    services: { type: Object },
+    username: { type: String },
+    emails: { type: Array },
+    profile: {
+        genderUser: { type: String },
+        firstNameUser: { type: String },
+        lastNameUser: { type: String },
+        nickNameUser: { type: String },
+        mailUser: { type: String },
+        biographyUser: { type: String },
+        initialsUser: { type: String },
+        passwordUser: { type: String },
+        seedUser: { type: String },
+        avatarUser: { type: String },
+        languageUser: { type: String },
+        colourBlindUser: { type: String },
+    }
 })
 
 
@@ -33,7 +45,7 @@ JWT Token
   "refreshTokenExpiresAt": "145"
 }
 */
-const OAuthTokensSchema = new Schema({
+const TokensSchema = new Schema({
     accessToken: { type: String }, // JWT with user id and client id and all other information important
     accessTokenExpiresAt: { type: Date },
     client: {
@@ -47,8 +59,8 @@ const OAuthTokensSchema = new Schema({
 })
 
 
-const OAuthAuthorizationCodeSchema = new Schema({
-    authorizationCode: { type: String, default: 'test' },
+const AuthorizationCodeSchema = new Schema({
+    authorizationCode: { type: String },
     redirect_uri: { type: String },
     expiresAt: { type: Date },
     client: {
@@ -58,7 +70,7 @@ const OAuthAuthorizationCodeSchema = new Schema({
 })
 
 // -------------------------- Creating Models ---------------------------------
-module.exports.OAuthTokensModel = mongoose.model('OAuthTokens', OAuthTokensSchema);
-module.exports.OAuthClientsModel = mongoose.model('OAuthClients', OAuthClientsSchema);
-module.exports.OAuthUsersModel = mongoose.model('OAuthUsers', OAuthUsersSchema);
-module.exports.OAuthAuthorizationCodeModel = mongoose.model('OAuthAuthorizationCode', OAuthAuthorizationCodeSchema);
+module.exports.TokensModel = mongoose.model('accessTokens', TokensSchema);
+module.exports.ClientsModel = mongoose.model('clients', ClientsSchema);
+module.exports.UsersModel = mongoose.model('users', UsersSchema);
+module.exports.AuthorizationCodeModel = mongoose.model('authorizationCode', AuthorizationCodeSchema);
