@@ -1,9 +1,11 @@
 /**
  * Module dependencies.
  */
+var jwt = require('jsonwebtoken');
 
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
+var tokenUtil = require('oauth2-server/lib/utils/token-util');
 
 require('dotenv').config();
 
@@ -47,12 +49,23 @@ const OAuthTokensSchema = new Schema({
     client: {
         id: { type: String }
     },
-    clientId: { type: String },
     refreshToken: { type: String },
     refreshTokenExpiresAt: { type: Date },
-    user: { type: Object },
-    userId: { type: String },
+    user: {
+        id: { type: String }
+    },
 })
+
+/*
+JWT Token
+{
+  "userId": "1234567890",
+  "clientId": "ace54s85",
+  "accessTokenExpiresAt": "1524521",
+  "refreshToken": "dsiejz478",
+  "refreshTokenExpiresAt": "145"
+}
+*/
 mongoose.model('OAuthTokens', OAuthTokensSchema);
 
 
@@ -63,10 +76,15 @@ const OAuthAuthorizationCodeSchema = new Schema({
     client: {
         id: { type: String }
     },
-    clientId: { type: String },
-    user: { type: OAuthUsersSchema }
+    user: { type: Object },
 })
+/*
+JWT Authorization code
+
+
+*/
 mongoose.model('OAuthAuthorizationCode', OAuthAuthorizationCodeSchema);
+
 
 var OAuthTokensModel = mongoose.model('OAuthTokens');
 var OAuthClientsModel = mongoose.model('OAuthClients');
@@ -99,7 +117,7 @@ OAuthClientsModel.find({}).remove()
             id: 'a17c21ed',
             clientSecret: 'client1',
             redirectUris: ['http://localhost:3000/redirected'],
-            grants: ['implicit', 'authorization_code']
+            grants: ['implicit', 'authorization_code', 'refresh_token']
         })
     }).
     then(() => {
@@ -107,10 +125,20 @@ OAuthClientsModel.find({}).remove()
     });
 
 
+module.exports.generateAccessToken = function (client, user, scope) {
+    return jwt.sign({
+        userId: user._id,
+        clientId: client.id,
+        accessTokenExpiresAt: Math.floor(Date.now() / 1000) + 60 * 60, // 1 hour
+        refreshToken: tokenUtil.generateRandomToken(),
+        refreshTokenExpiresAt: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 14 // 2 semaines
+    }, process.env.secretKey);
+}
+
+
 /**
  * Get access token.
  */
-
 module.exports.getAccessToken = function (bearerToken) {
     // Adding `.lean()`, as we get a mongoose wrapper object back from `findOne(...)`, and oauth2-server complains.
     return OAuthTokensModel.findOne({ accessToken: bearerToken }).lean();
@@ -131,8 +159,7 @@ module.exports.getClient = function (clientId, clientSecret) {
  * Get refresh token.
  */
 module.exports.getRefreshToken = function (refreshToken) {
-    //return OAuthTokensModel.findOne({ refreshToken: refreshToken }).lean();
-    return refreshToken
+    return OAuthTokensModel.findOne({ refreshToken: refreshToken }).lean();
 };
 
 /**
@@ -152,17 +179,19 @@ module.exports.getAuthorizationCode = function (authorization_code) {
 
 /**
  * Save the Authorization Code
+ * 
  */
 module.exports.saveAuthorizationCode = function (authorizationCode, client, user) {
     var oAuthAuthorizationCode = new OAuthAuthorizationCodeModel({
-        authorizationCode: 'test',
-        redirect_uri: 'http://localhost:3000/redirected',
-        expiresAt: Date.now() + 3600 * 1000,
+        authorizationCode: 'test',//authorizationCode.authorizationCode,
+        redirect_uri: authorizationCode.redirectUri,
+        expiresAt: authorizationCode.expiresAt,
         client: {
             id: client.id
         },
-        clientId: client.clientId,
-        user: user
+        user: {
+            id: user._id
+        },
     })
 
     // Can't just chain `lean()` to `save()` as we did with `findOne()` elsewhere. Instead we use `Promise` to resolve the data.
@@ -178,23 +207,24 @@ module.exports.saveAuthorizationCode = function (authorizationCode, client, user
         saveResult = saveResult && typeof saveResult == 'object' ? saveResult.toJSON() : saveResult;
         return saveResult;
     }).catch(err => console.log(err));
+
 };
 
 /**
  * Save token.
  */
-
 module.exports.saveToken = function (token, client, user) {
     var accessToken = new OAuthTokensModel({
         accessToken: token.accessToken,
         accessTokenExpiresAt: token.accessTokenExpiresAt,
-        client: client,
-        clientId: client.clientId,
         refreshToken: token.refreshToken,
         refreshTokenExpiresAt: token.refreshTokenExpiresAt,
-        user: user,
-        userId: user._id,
+        client: {
+            id: client.id
+        },
+        user: user
     });
+
 
     // Can't just chain `lean()` to `save()` as we did with `findOne()` elsewhere. Instead we use `Promise` to resolve the data.
     return new Promise(function (resolve, reject) {
@@ -212,4 +242,8 @@ module.exports.saveToken = function (token, client, user) {
 
 module.exports.revokeAuthorizationCode = function (authorization_code) {
     return OAuthAuthorizationCodeModel.findOne({ authorizationCode: authorization_code.authorizationCode }).remove();
+}
+
+module.exports.revokeToken = function (token) {
+    return OAuthTokensModel.findOne({ refreshToken: token.refreshToken }).remove();
 }
