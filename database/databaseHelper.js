@@ -1,7 +1,11 @@
 const mongoose = require('mongoose');
-var Schema = mongoose.Schema;
 require('dotenv').config();
+const models = require('./models');
 
+const OAuthTokensModel = models.OAuthTokensModel;
+const OAuthClientsModel = models.OAuthClientsModel;
+const OAuthUsersModel = models.OAuthUsersModel;
+const OAuthAuthorizationCodeModel = models.OAuthAuthorizationCodeModel;
 //------------------------ CONNECTION DATABASE ------------------------------------
 
 var uristring = process.env.dbURL || 'mongodb://localhost/test';
@@ -15,81 +19,6 @@ mongoose.connect(uristring, function (err, res) {
         console.log('Succeeded connected to: ' + uristring);
     }
 });
-
-// -------------------------- Creating Schema --------------------------------
-
-/**
- * Schema definitions.
- */
-const OAuthClientsSchema = new Schema({
-    id: { type: String },
-    clientSecret: { type: String },
-    redirectUris: { type: Array },
-    grants: { type: Array }
-})
-mongoose.model('OAuthClients', OAuthClientsSchema);
-
-
-const OAuthUsersSchema = new Schema({
-    email: { type: String, default: '' },
-    firstname: { type: String },
-    lastname: { type: String },
-    password: { type: String },
-    username: { type: String }
-})
-mongoose.model('OAuthUsers', OAuthUsersSchema);
-
-
-const OAuthTokensSchema = new Schema({
-    accessToken: { type: String }, // JWT with user id and client id and all other information important
-    accessTokenExpiresAt: { type: Date },
-    client: {
-        id: { type: String }
-    },
-    refreshToken: { type: String },
-    refreshTokenExpiresAt: { type: Date },
-    user: {
-        id: { type: String }
-    },
-})
-
-/*
-JWT Token
-{
-  "userId": "1234567890",
-  "clientId": "ace54s85",
-  "accessTokenExpiresAt": "1524521",
-  "refreshToken": "dsiejz478",
-  "refreshTokenExpiresAt": "145"
-}
-*/
-mongoose.model('OAuthTokens', OAuthTokensSchema);
-
-
-const OAuthAuthorizationCodeSchema = new Schema({
-    authorizationCode: { type: String, default: 'test' },
-    redirect_uri: { type: String },
-    expiresAt: { type: Date },
-    client: {
-        id: { type: String }
-    },
-    user: { type: Object },
-})
-/*
-JWT Authorization code
-
-
-*/
-mongoose.model('OAuthAuthorizationCode', OAuthAuthorizationCodeSchema);
-
-
-
-// -------------------------- Creating Models ---------------------------------
-const OAuthTokensModel = mongoose.model('OAuthTokens');
-const OAuthClientsModel = mongoose.model('OAuthClients');
-const OAuthUsersModel = mongoose.model('OAuthUsers');
-const OAuthAuthorizationCodeModel = mongoose.model('OAuthAuthorizationCode');
-
 
 // -------------------------- Populate DB --------------------------------
 
@@ -120,7 +49,10 @@ OAuthClientsModel.find({}).remove()
             id: 'a17c21ed',
             clientSecret: 'client1',
             redirectUris: ['http://localhost:3000/redirected'],
-            grants: ['implicit', 'authorization_code', 'refresh_token']
+            grants: ['implicit', 'authorization_code', 'refresh_token'],
+            nameClient: 'Trello',
+            logoClient: 'url',
+            descriptionClient: ''
         })
     }).
     then(() => {

@@ -4,7 +4,7 @@
 var jwt = require('jsonwebtoken');
 
 var tokenUtil = require('oauth2-server/lib/utils/token-util');
-const db = require('./databaseHelper')
+const db = require('./database/databaseHelper')
 
 module.exports.generateAccessToken = function (client, user, scope) {
     return jwt.sign({
