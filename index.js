@@ -72,7 +72,6 @@ app.post('/oauth/authorize', function (req, res, next) {
     return app.oauth.authorize(request, response, option)
         .then(function (code) {
             res.locals.oauth = { code: code };
-
             if (code.accessToken) {
                 //Case Implicit Grant
                 const token_modified = {
@@ -82,7 +81,6 @@ app.post('/oauth/authorize', function (req, res, next) {
                 }
                 return res.json(token_modified)
             } else {
-
                 return handleResponse.call(this, req, res, response);
             }
         }).catch(function (err) {
