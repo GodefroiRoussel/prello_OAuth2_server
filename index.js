@@ -9,6 +9,16 @@ var Request = require('oauth2-server').Request;
 var Response = require('oauth2-server').Response;
 var UnauthorizedRequestError = require('oauth2-server/lib/errors/unauthorized-request-error');
 const db = require('./database/databaseHelper');
+var WebSocket = require('ws')
+const createClass = require("asteroid").createClass;
+
+const Asteroid = createClass();
+// Connect to a Meteor backend
+const asteroid = new Asteroid({
+    endpoint: 'ws://localhost:9000/websocket',
+    SocketConstructor: WebSocket
+});
+
 
 
 const app = express();
@@ -80,7 +90,12 @@ app.post('/oauth/authorize', function (req, res, next) {
 
     let authenticateHandler = {
         handle: function (request, response) {
-            return db.getUser(request.body.username, request.body.password);
+            return asteroid.loginWithPassword({ username: request.body.username, password: request.body.password }).then(res => {
+                return db.getUserWithUsername(request.body.username);
+            }).catch(err => {
+                console.log(err)
+                return handleError.call(this, err, req, res, response, next);
+            });
         }
     };
 
@@ -128,7 +143,7 @@ app.post('/oauth/access_token', function (req, res) {
                 refreshTokenExpiresAt: token.refreshTokenExpiresAt,
                 token_type: "bearer"
             }
-            return res.json(token_modified)
+            return res.status(200).json(token_modified)
         }).catch(function (err) {
             return res.status(500).json(err)
         });
@@ -179,6 +194,8 @@ var handleResponse = function (req, res, response) {
 
 var handleError = function (e, req, res, response, next) {
 
+    console.log("ERREUR")
+    console.log(e)
     if (this.useErrorHandler === true) {
         next(e);
     } else {
@@ -192,6 +209,6 @@ var handleError = function (e, req, res, response, next) {
             return res.send();
         }
 
-        res.send({ error: e.name, error_description: e.message });
+        res.status(400).send({ error: e.name, error_description: e.message });
     }
 };

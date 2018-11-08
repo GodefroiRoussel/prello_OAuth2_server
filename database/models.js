@@ -74,4 +74,4 @@ const AuthorizationCodeSchema = new Schema({
 module.exports.TokensModel = mongoose.model('accessTokens', TokensSchema);
 module.exports.ClientsModel = mongoose.model('clients', ClientsSchema);
 module.exports.UsersModel = mongoose.model('users', UsersSchema);
-module.exports.AuthorizationCodeModel = mongoose.model('authorizationCode', AuthorizationCodeSchema);
+module.exports.AuthorizationCodeModel = mongoose.model('authorizationcodes', AuthorizationCodeSchema);

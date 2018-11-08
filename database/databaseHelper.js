@@ -48,6 +48,14 @@ module.exports.getUser = function (username, password) {
     });
 }
 
+module.exports.getUserWithUsername = function (username) {
+    return UsersModel.findOne({ username: username }).lean().then(user => {
+        if (!user)
+            return null
+        return user;
+    });
+}
+
 module.exports.getAuthorizationCode = function (authorization_code) {
     return AuthorizationCodeModel.findOne({ authorizationCode: authorization_code }).lean();
 }
