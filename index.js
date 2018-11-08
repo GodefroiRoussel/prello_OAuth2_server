@@ -46,7 +46,28 @@ app.all('/*', function (req, res, next) {
 // Get authorization page.
 app.get('/oauth/authorize', function (req, res) {
     // render an authorization form
-    res.render('login.ejs', { application: 'Prello Third Parties Application' });
+    const cookie = false;
+    if (cookie) {
+        // TODO: Display Authorization page
+    } else {
+        const client_id = req.query.client_id;
+        const response_type = req.query.response_type;
+        const state = req.query.state;
+        const redirect_uri = req.query.redirect_uri;
+
+        if (client_id) {
+            db.getClientWithId(client_id).then(client => {
+                if (!client) {
+                    res.setHeader('Content-Type', 'text/plain');
+                    return res.status(404).send('Client not found !');
+                }
+                res.render('login.ejs', { client: client, response_type: response_type, state: state, redirect_uri: redirect_uri });
+            })
+        } else {
+            res.setHeader('Content-Type', 'text/plain');
+            res.status(400).send('Bad Request ! ');
+        }
+    }
 });
 
 // Post authorization.

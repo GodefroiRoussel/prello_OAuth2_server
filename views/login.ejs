@@ -4,7 +4,7 @@
 
 <head>
     <title>OAuth Authorization</title>
-    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <!-- load bootstrap css -->
     <link rel="stylesheet" href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.min.css">
     <!-- load fontawesome -->
@@ -17,18 +17,36 @@
     <div class="container">
 
         <div class="col-sm-6 col-sm-offset-3">
+            <div class="media">
+                <a href=<%=client.websiteClient %>>
+                    <img class="media-object" src="https://images.ecosia.org/UQM711x6YLMLzmOdHReDk7JVhDM=/0x390/smart/https%3A%2F%2Fcdn.dribbble.com%2Fusers%2F540920%2Fscreenshots%2F2355118%2Ftrello.png"
+                        alt="Trello's Logo">
+                </a>
+            </div>
+            <p>
+                By logging in, you'll allow
+                <b>
+                    <%= client.nameClient %>
+                </b>
+                to:
+            </p>
 
-            <p>If you want to give access to the application
-                <%= application %> then log in </p>
+            <ul class="list-group">
+                <li class="list-group-item"><b>Access</b> to your personnal information </li>
+                <li class="list-group-item"><b>Access</b> to every board, card and team linked to your profile</li>
+                <li class="list-group-item"><b>Create</b> <b>Update</b> and <b>Delete</b> all boards, cards and teams</li>
+            </ul>
+
+            <hr>
 
             <h1><span class="fa fa-sign-in"></span> Login</h1>
 
             <!-- LOGIN FORM -->
-            <form action="/oauth/authorize?client_id=a17c21ed&response_type=code&state=5ca75bd30&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fredirected"
+            <form action="/oauth/authorize?client_id=<%= client.id %>&response_type=<%= response_type %>&state=<%= state %>&redirect_uri=<%= redirect_uri %>"
                 method="post">
                 <div class="form-group">
-                    <label>Email</label>
-                    <input type="text" class="form-control" name="email">
+                    <label>Username</label>
+                    <input type="text" class="form-control" name="username">
                 </div>
                 <div class="form-group">
                     <label>Password</label>
@@ -37,11 +55,6 @@
 
                 <button type="submit" class="btn btn-warning btn-lg">Login</button>
             </form>
-
-            <hr>
-
-            <p>Need an account? <a href="/signup">Signup</a></p>
-            <p>Or go <a href="/">home</a>.</p>
 
         </div>
 
