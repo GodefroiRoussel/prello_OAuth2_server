@@ -4,7 +4,6 @@ var bodyParser = require('body-parser');
 var https = require('https');
 var http = require('http');
 var path = require("path");
-var mongoose = require('mongoose');
 const oauthServer = require("oauth2-server");
 var Request = require('oauth2-server').Request;
 var Response = require('oauth2-server').Response;
@@ -58,14 +57,17 @@ app.post('/oauth/authorize', function (req, res, next) {
     var request = new Request(req);
     var response = new Response(res);
 
-    //TODO: UPDATE IT: JUST HERE FOR DEVELOPMENT PURPOSES
     let authenticateHandler = {
         handle: function (request, response) {
-            return db.getUser('godefroiroussel', 'password');
+            return db.getUser(request.body.username, request.body.password);
         }
     };
 
-    const option = { authenticateHandler: authenticateHandler }
+    const option = {
+        authenticateHandler: authenticateHandler,
+        accessTokenLifetime: 1800
+    }
+
     return app.oauth.authorize(request, response, option)
         .then(function (code) {
             res.locals.oauth = { code: code };
@@ -92,7 +94,11 @@ app.post('/oauth/access_token', function (req, res) {
     var request = new Request(req);
     var response = new Response(res);
 
-    return app.oauth.token(request, response)
+    const option = {
+        accessTokenLifetime: 1800
+    }
+
+    return app.oauth.token(request, response, option)
         .then(function (token) {
             const token_modified = {
                 accessToken: token.accessToken, // JWT with user id and client id and all other information important

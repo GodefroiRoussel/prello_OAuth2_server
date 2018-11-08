@@ -78,7 +78,7 @@ ClientsModel.find({}).remove()
 
 
 // -------------------------- FUNCTIONS ---------------------------------------
-module.exports.findAuthorizationToken = function (bearerToken) {
+module.exports.getAccessToken = function (bearerToken) {
     // Adding `.lean()`, as we get a mongoose wrapper object back from `findOne(...)`, and oauth2-server complains.
     return TokensModel.findOne({ accessToken: bearerToken }).lean();
 }
@@ -110,7 +110,7 @@ module.exports.getAuthorizationCode = function (authorization_code) {
 
 module.exports.saveAuthorizationCode = function (authorizationCode, client, user) {
     var oAuthAuthorizationCode = new AuthorizationCodeModel({
-        authorizationCode: 'test',//authorizationCode.authorizationCode,
+        authorizationCode: authorizationCode.authorizationCode,
         redirect_uri: authorizationCode.redirectUri,
         expiresAt: authorizationCode.expiresAt,
         client: {

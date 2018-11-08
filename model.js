@@ -10,9 +10,9 @@ module.exports.generateAccessToken = function (client, user, scope) {
     return jwt.sign({
         userId: user._id,
         clientId: client.id,
-        accessTokenExpiresAt: Math.floor(Date.now() / 1000) + 60 * 60, // 1 hour
+        accessTokenExpiresAt: Math.floor(Date.now() / 1000) + (60 * 30), // 30 minutes
         refreshToken: tokenUtil.generateRandomToken(),
-        refreshTokenExpiresAt: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 14 // 2 semaines
+        refreshTokenExpiresAt: Math.floor(Date.now() / 1000) + (60 * 60 * 24 * 14) // 2 semaines
     }, process.env.secretKey);
 }
 
@@ -21,7 +21,7 @@ module.exports.generateAccessToken = function (client, user, scope) {
  * Get access token.
  */
 module.exports.getAccessToken = function (bearerToken) {
-    return db.findAuthorizationToken(bearerToken)
+    return db.getAccessToken(bearerToken)
 };
 
 /**
