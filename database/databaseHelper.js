@@ -20,62 +20,6 @@ mongoose.connect(uristring, function (err, res) {
     }
 });
 
-// -------------------------- Populate DB --------------------------------
-
-
-AuthorizationCodeModel.find({}).remove()
-    .then(() => console.log('Removed all OAuth Authorization Code'));
-
-TokensModel.find({}).remove()
-    .then(() => console.log('Removed all OAuth Tokens '));
-//Populate some datas
-UsersModel.find({}).remove()
-    .then(() => {
-        UsersModel.create({
-            createdAt: Date.now(),
-            services: {},
-            username: 'godefroiroussel',
-            emails: ['test@email.com'],
-            profile: {
-                genderUser: 'Male',
-                firstNameUser: 'Godefroi',
-                lastNameUser: 'Roussel',
-                nickNameUser: 'GodefroiRoussel',
-                mailUser: 'test@email.com',
-                biographyUser: '',
-                initialsUser: 'GR',
-                passwordUser: 'password',
-                seedUser: 'test',
-                avatarUser: '',
-                languageUser: '',
-                colourBlindUser: ''
-            },
-
-        })
-    })
-    .then(function () {
-        console.log('finished populating UsersModel');
-    });
-
-ClientsModel.find({}).remove()
-    .then(() => {
-        ClientsModel.create({
-            id: 'a17c21ed',
-            clientSecret: 'client1',
-            redirectUris: ['http://localhost:3000/redirected'],
-            grants: ['implicit', 'authorization_code', 'refresh_token'],
-            nameClient: 'Trello',
-            logoClient: 'url',
-            descriptionClient: '',
-            websiteClient: 'https://trello.com/?truid=trc17f72-1cd0-4f52-ddb2-97554c799451'
-        })
-    }).
-    then(() => {
-        console.log('finished populating ClientsModel');
-    });
-
-
-
 
 // -------------------------- FUNCTIONS ---------------------------------------
 module.exports.getAccessToken = function (bearerToken) {
