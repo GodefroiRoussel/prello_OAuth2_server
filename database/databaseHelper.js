@@ -66,7 +66,8 @@ ClientsModel.find({}).remove()
             grants: ['implicit', 'authorization_code', 'refresh_token'],
             nameClient: 'Trello',
             logoClient: 'url',
-            descriptionClient: ''
+            descriptionClient: '',
+            websiteClient: 'https://trello.com/?truid=trc17f72-1cd0-4f52-ddb2-97554c799451'
         })
     }).
     then(() => {

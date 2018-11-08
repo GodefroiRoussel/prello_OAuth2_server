@@ -9,7 +9,8 @@ const ClientsSchema = new Schema({
     grants: { type: Array },
     nameClient: { type: String },
     logoClient: { type: String },
-    descriptionClient: { type: String, optional: true }
+    descriptionClient: { type: String, optional: true },
+    websiteClient: { type: String }
 })
 
 
