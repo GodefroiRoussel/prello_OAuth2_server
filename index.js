@@ -15,7 +15,7 @@ const createClass = require("asteroid").createClass;
 const Asteroid = createClass();
 // Connect to a Meteor backend
 const asteroid = new Asteroid({
-    endpoint: 'ws://localhost:9000/websocket',
+    endpoint: process.env.APIURL || 'ws://localhost:9000/websocket',
     SocketConstructor: WebSocket
 });
 
@@ -32,7 +32,7 @@ app.set('view engine', 'ejs'); // set up ejs for templating
 
 // Add OAuth server
 app.oauth = new oauthServer({
-    debug: true,
+    //debug: true,
     model: require('./model')
 })
 
