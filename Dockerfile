@@ -24,6 +24,10 @@ RUN mkdir views
 
 COPY views ./views
 
+RUN mkdir database
+
+COPY database ./database
+
 EXPOSE 3000
 
 CMD ["node", "index.js"]
