@@ -36,21 +36,19 @@ app.oauth = new oauthServer({
     model: require('./model')
 })
 
-//TODO: Handle CORS
-/*
+
 app.all('/*', function (req, res, next) {
     // CORS headers
     res.header("Access-Control-Allow-Origin", "*");
     res.header('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
     // Custom headers
-    res.header('Access-Control-Allow-Headers', 'Content-Type,Accept,X-Access-Token,X-Key,Authorization');
+    //res.header('Access-Control-Allow-Headers', 'Content-Type,Accept,X-Access-Token,X-Key,Authorization');
     if (req.method === 'OPTIONS') {
         res.sendStatus(200);
     } else {
         next();
     }
 });
-*/
 
 //TODO: UPDATE THE LOGIN FORM AND LET THE POSSIBILITY TO GET AN AUTHORIZATION PAGE WITH ONLY ALLOW OR DENY CHOICE
 // Get authorization page.
