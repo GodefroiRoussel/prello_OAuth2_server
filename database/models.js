@@ -7,6 +7,7 @@ const ClientsSchema = new Schema({
     clientSecret: { type: String },
     redirectUris: { type: Array },
     grants: { type: Array },
+    scopes: { type: Array },
     nameClient: { type: String },
     logoClient: { type: String },
     descriptionClient: { type: String, optional: true },
@@ -36,22 +37,13 @@ const UsersSchema = new Schema({
 })
 
 
-/*
-JWT Token
-{
-  "userId": "1234567890",
-  "clientId": "ace54s85",
-  "accessTokenExpiresAt": "1524521",
-  "refreshToken": "dsiejz478",
-  "refreshTokenExpiresAt": "145"
-}
-*/
 const TokensSchema = new Schema({
     accessToken: { type: String }, // JWT with user id and client id and all other information important
     accessTokenExpiresAt: { type: Date },
     client: {
         id: { type: String }
     },
+    scopes: { type: Array },
     refreshToken: { type: String },
     refreshTokenExpiresAt: { type: Date },
     user: {

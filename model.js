@@ -6,14 +6,18 @@ var jwt = require('jsonwebtoken');
 var tokenUtil = require('oauth2-server/lib/utils/token-util');
 const db = require('./database/databaseHelper')
 
+const SCOPES = ['read', 'write'];
+
+// TODO: Generate the scope depending on the user demand
 module.exports.generateAccessToken = function (client, user, scope) {
     return jwt.sign({
-        userId: user._id,
+        userId: user.id,
         clientId: client.id,
-        accessTokenExpiresAt: Math.floor(Date.now() / 1000) + (60 * 30), // 30 minutes
+        scopes: SCOPES,
+        iss: process.env.URL,
         refreshToken: tokenUtil.generateRandomToken(),
         refreshTokenExpiresAt: Math.floor(Date.now() / 1000) + (60 * 60 * 24 * 14) // 2 semaines
-    }, process.env.secretKey);
+    }, process.env.secretKey, { expiresIn: 60 * 30 }); // 30 minutes
 }
 
 

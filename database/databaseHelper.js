@@ -91,6 +91,7 @@ module.exports.saveAuthorizationCode = function (authorizationCode, client, user
 module.exports.saveToken = function (token, client, user) {
     var accessToken = new TokensModel({
         accessToken: token.accessToken,
+        scopes: token.scopes,
         accessTokenExpiresAt: token.accessTokenExpiresAt,
         refreshToken: token.refreshToken,
         refreshTokenExpiresAt: token.refreshTokenExpiresAt,
