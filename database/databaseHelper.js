@@ -8,7 +8,7 @@ const UsersModel = models.UsersModel;
 const AuthorizationCodeModel = models.AuthorizationCodeModel;
 //------------------------ CONNECTION DATABASE ------------------------------------
 
-var uristring = process.env.dbURL || 'mongodb://127.0.0.1:9001/meteor';
+var uristring = process.env.DB_URL || 'mongodb://127.0.0.1:9001/meteor';
 
 // Makes connection asynchronously. Mongoose will queue up database
 // operations and release them when the connection is complete.
