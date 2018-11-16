@@ -86,14 +86,29 @@ app.post('/oauth/authorize', function (req, res, next) {
     var request = new Request(req);
     var response = new Response(res);
 
+    const username = request.body.username;
+    const password = request.body.password;
+
     let authenticateHandler = {
         handle: function (request, response) {
-            return asteroid.loginWithPassword({ username: request.body.username, password: request.body.password }).then(res => {
-                return db.getUserWithUsername(request.body.username);
-            }).catch(err => {
-                console.log(err)
-                return handleError.call(this, err, req, res, response, next);
-            });
+            return db.getUserWithUsername(username).then(user => {
+                if (user && !user.services.password) {
+                    return asteroid.call('loginPolytech', { username: username, password: password }).then(res => {
+                        return db.getUserWithUsername(username);
+                    }).catch(err => {
+                        console.log(err)
+                        return handleError.call(this, err, req, res, response, next);
+                    });
+                } else {
+                    return asteroid.loginWithPassword({ username: username, password: password }).then(res => {
+                        return db.getUserWithUsername(username);
+                    }).catch(err => {
+                        console.log(err)
+                        return handleError.call(this, err, req, res, response, next);
+                    });
+                }
+            })
+
         }
     };
 
