@@ -88,10 +88,11 @@ module.exports.saveAuthorizationCode = function (authorizationCode, client, user
     }).catch(err => console.log(err));
 }
 
+const SCOPES = ['read', 'write'];
 module.exports.saveToken = function (token, client, user) {
     var accessToken = new TokensModel({
         accessToken: token.accessToken,
-        scopes: token.scopes,
+        scopes: SCOPES,
         accessTokenExpiresAt: token.accessTokenExpiresAt,
         refreshToken: token.refreshToken,
         refreshTokenExpiresAt: token.refreshTokenExpiresAt,
